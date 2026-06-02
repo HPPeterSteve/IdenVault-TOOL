@@ -1,9 +1,0 @@
-C:\Users\Pedro\Downloads\IdenVault TOOL\IdenVault\target\debug\deps\derive_more_impl-bf90d165bda08685.d: C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\lib.rs C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\utils.rs C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\is_variant.rs C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\../README.md C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\../doc/is_variant.md
-
-C:\Users\Pedro\Downloads\IdenVault TOOL\IdenVault\target\debug\deps\derive_more_impl-bf90d165bda08685.dll: C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\lib.rs C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\utils.rs C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\is_variant.rs C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\../README.md C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\../doc/is_variant.md
-
-C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\lib.rs:
-C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\utils.rs:
-C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\is_variant.rs:
-C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\../README.md:
-C:\Users\Pedro\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\derive_more-impl-2.1.1\src\../doc/is_variant.md:
