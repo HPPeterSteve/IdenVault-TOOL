@@ -4,7 +4,7 @@
  * VAULT SECURITY SYSTEM — Unified Header
  * All structs, enums, constants and forward declarations.
  *
- * Split from legacy monolith — Peter Steve (architecture)
+ * Split from diamondVaults.c — Peter Steve (architecture)
  * Date: 2026-05-13
  */
 
@@ -35,7 +35,15 @@ extern "C"
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include <sys/fanotify.h>
+    /* Per-file leaky bucket for fine-grained throttling */
+    typedef struct FileBucket
+    {
+        char path[VAULT_PATH_MAX];
+        double credits;
+        time_t last_update;
+        struct FileBucket *next;
+    } FileBucket;
+#include <sys/inotify.h>
 #include <sys/wait.h>
 #include <pthread.h>
 #include <termios.h>
@@ -67,6 +75,8 @@ extern "C"
  * ───────────────────────────────────────────── */
 #define VAULT_CATALOG_PATH "/var/lib/vault_security"
 #define VAULT_CATALOG_FILE "/var/lib/vault_security/catalog.dat"
+    /* Optional per-file buckets (linked list) for slow-stealth detection */
+    FileBucket *file_buckets;
 #define VAULT_LOG_FILE "/var/log/vault_security.log"
 #define VAULT_LOCK_FILE "/var/run/vault_security.pid"
 
@@ -82,10 +92,14 @@ extern "C"
 #define MAX_PASS_ATTEMPTS 3
 #define MAX_PASS_LEN 256
 
+#ifdef __linux__
+#define INOTIFY_BUFSZ (4096 * (sizeof(struct inotify_event) + NAME_MAX + 1))
+#endif
+
 /* Sandbox v2 */
 #define SANDBOX_NOBODY_UID 65534
 #define SANDBOX_NOBODY_GID 65534
-#define SANDBOX_JAIL_MARKER ".idenvault_jail_ready"
+#define SANDBOX_JAIL_MARKER ".diamond_jail_ready"
 #define SANDBOX_TMP_SIZE "mode=1777,size=64m"
 
 /* AES-256-GCM */
@@ -166,14 +180,6 @@ extern "C"
         struct FileEntry *next;
     } FileEntry;
 
-/* Authorized PIDs whitelist for anti-malware filter */
-#define MAX_AUTH_PIDS 256
-    extern pid_t g_auth_pids[MAX_AUTH_PIDS];
-    extern uint32_t g_auth_pid_count;
-#ifdef __linux__
-    extern pthread_mutex_t g_auth_pid_lock;
-#endif
-
 /* Hash map bucket */
 #define HASHMAP_BUCKETS 256
     typedef struct
@@ -201,8 +207,6 @@ extern "C"
         VaultStatus status;
         bool has_pass;
         char path[VAULT_PATH_MAX];
-        char cipher_path[VAULT_PATH_MAX]; /* Armazenamento Físico */
-        bool is_mounted;
         time_t created_at;
         time_t last_check;
         int failed_attempts;
@@ -217,9 +221,15 @@ extern "C"
         /* Alert state */
         AlertState alert;
 
+        /* fanotify watch descriptor (Linux only) */
+        int fanotify_wd;
+
         /* Protection */
         bool write_mode; /* True only during authorized write operations */
-        int fanotify_wd; /* Fanotify mark descriptor */
+
+        /* Optional per-file buckets (linked list) */
+        FileBucket *file_buckets;
+        double bucket_credits;
 
         /* Engine de isolamento (0 = sem engine, 1-5 = níveis de proteção) */
         int engine_level;
@@ -231,7 +241,7 @@ extern "C"
         Vault vaults[MAX_VAULTS];
         uint32_t count;
         uint32_t next_id;
-        char category[32]; /* "idenvault" */
+        char category[32]; /* "diamond" */
     } Catalog;
 
     /* Monitor thread context */
@@ -341,25 +351,28 @@ extern "C"
     /* vault_sandbox.c */
     VaultError vault_sandbox_open(Vault *v, const char *password);
 
-    /* vault_fuse.c */
-    VaultError vault_fuse_mount(Vault *v);
-    VaultError vault_fuse_unmount(Vault *v);
-
 /* vault_engine.c */
-#define ENGINE_LEVEL_MIN 0
-#define ENGINE_LEVEL_MAX 5
-#define ENGINE_DECOY_DIR ".engine_decoy"
-#define ENGINE_REAL_DIR ".engine_real"
+#define ENGINE_LEVEL_MIN 0               /* sem engine */
+#define ENGINE_LEVEL_MAX 5               /* OverlayFS  */
+#define ENGINE_DECOY_DIR ".engine_decoy" /* subdir de iscas dentro do vault */
+#define ENGINE_REAL_DIR ".engine_real"   /* subdir de arquivos reais        */
 #define ENGINE_LOG_PREFIX "[ENGINE]"
 
+    /* Camadas por engine:
+     *   0 → 0 camadas (sem labirinto)
+     *   1 → 1 camada,  arquivos a-z
+     *   2 → 3 camadas, arquivos a-z por camada
+     *   3 → 6 camadas, arquivos a-z por camada
+     *   4 → 16 camadas + binários falsos .enc
+     *   5 → 20 camadas + binários falsos .enc (OverlayFS adicionado depois)
+     */
     static const int ENGINE_LAYER_COUNT[] = {0, 1, 3, 6, 16, 20};
 
     VaultError engine_apply(Vault *v);
     VaultError engine_validate(Vault *v);
     bool engine_is_decoy_path(const char *path);
-    bool engine_is_decoy_path_v(const Vault *v, const char *path);
 
-    /* vault_cli.c (standalone CLI — only for IdenVault standalone binary) */
+    /* vault_cli.c (standalone CLI — only for diamondVaults standalone binary) */
     /* Not needed for FFI build */
 
     /* ─────────────────────────────────────────────
@@ -379,8 +392,8 @@ extern "C"
     int vault_rename_ffi(uint32_t id, const char *new_name, const char *password);
     int vault_unlock_ffi(uint32_t id, const char *password);
     int vault_change_password_ffi(uint32_t id, const char *old_pass, const char *new_pass);
-    int vault_encrypt_ffi(uint32_t id, const char *password);
-    int vault_decrypt_ffi(uint32_t id, const char *password);
+    int vault_encrypt_ffi(const char *password);
+    int vault_decrypt_ffi(const char *password);
     int vault_scan_ffi(uint32_t id);
     int vault_scan_report_ffi(uint32_t id, char *out, size_t out_len);
     int vault_resolve_ffi(uint32_t id, const char *password);
@@ -388,8 +401,6 @@ extern "C"
     void vault_list_ffi(void);
     void vault_files_ffi(uint32_t id);
     int vault_sandbox_ffi(uint32_t id, const char *password);
-    int vault_mount_ffi(uint32_t id, const char *password);
-    int vault_unmount_ffi(uint32_t id);
     int vault_rule_ffi(uint32_t vault_id, int max_fails, int hour_from, int hour_to);
     int vault_get_status_ffi(uint32_t id);
     int vault_export_file_ffi(uint32_t id, const char *filename, const char *dst_path);
@@ -397,7 +408,11 @@ extern "C"
     int vault_get_real_path_ffi(uint32_t id, char *out_path, size_t out_len);
     int vault_is_protected_ffi(uint32_t id);
 
-    /* PID whitelisting for anti-malware */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* VAULT_CORE_H */
     void vault_auth_pid_add_ffi(pid_t pid);
     void vault_auth_pid_remove_ffi(pid_t pid);
     int vault_auth_pid_is_authorized_ffi(pid_t pid);
