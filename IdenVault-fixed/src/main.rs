@@ -78,6 +78,12 @@ const ALL_COMMANDS: &[&str] = &[
     "vault-rule",
     "vault-export",
     "manual",
+    /* FUSE / API additions */
+    "mount",
+    "unmount",
+    "api-start",
+    "api-stop",
+    "api-status",
 ];
 
 fn show_help() {
@@ -95,6 +101,11 @@ fn show_help_for(cmd: &str) {
             println!(
                 "{}",
                 "\nComandos disponíveis:\n\n── Operações de arquivo / diretório ──────────────────────────────────────\ncreate-vault <path>        → cria um cofre (diretório)\nadd-file <vault> <file>    → adiciona arquivo ao cofre\nsafe-copy <src> <dst>      → copia com segurança\nallow-write <file>         → libera escrita\nread-directory <dir>       → lista arquivos\nisolate-directory <dir>    → isola diretório\nsecure-copy <file> <vault> [pass] → protege e armazena (senha opcional)\nencrypt <file> [pass]      → criptografa arquivo (senha opcional)\ndecrypt <file> [pass]      → descriptografa arquivo (senha opcional)\nremove-file <vault> <file> → remove arquivo do cofre\nstatus <vault|id>          → mostra status do cofre\nrun-in-sandbox <dir>       → roda diretório em sandbox\n\n── Core C — Vault Security System ────────────────────────────────────────\nvault-list                             → lista todos os cofres (catálogo)\nvault-create <name> <path> <type>      → cria cofre no core C\n  type: normal | protected\nvault-delete  <id>                     → deleta cofre pelo ID\nvault-rename  <id> <new_name>          → renomeia cofre\nvault-unlock  <id>                     → desbloqueia cofre após lockout\nvault-passwd  <id>                     → troca senha do cofre\nvault-encrypt <id>                     → criptografa arquivos (AES-256)\nvault-decrypt <id>                     → descriptografa arquivos\nvault-scan    <id>                     → força varredura de integridade\nvault-resolve <id>                     → resolve alerta ativo\nvault-info    <id>                     → detalhes do cofre\nvault-files   <id>                     → lista arquivos rastreados\nvault-sandbox <id>                     → abre cofre em shell sandbox\nvault-rule    <id> <max_fails> [h_from h_to]  → adiciona regra de segurança\nvault-export  <id> <file> <dst>              → exporta arquivo do cofre\n\n── Sistema ───────────────────────────────────────────────────────────────\nsystem-information [cpu] [memory] [disks] [networks] [processes]\nlist-process-status        → lista status dos processos ativos\nderive-master-key          → deriva master key (senha + chave USB)\n\nmanual                     → manual de operação interativo\nhelp                       → esta ajuda\nexit                       → sair\n"
+                    .cyan()
+            );
+            println!(
+                "{}",
+                "\n── FUSE / API (Novidades 1.4.0) ─────────────────────────────────────────\nmount <vault> <mountpoint>      → monta o cofre via FUSE no caminho indicado\nunmount <mountpoint|vault>      → desmonta o ponto de montagem\n\napi-start [--port <p> ]         → inicia a API HTTP local (padrão 127.0.0.1:8080)\napi-stop                        → para a API em execução\napi-status                      → mostra status da API (porta, pid)\n\nUse 'help <comando>' para detalhes do comando."
                     .cyan()
             );
         }
