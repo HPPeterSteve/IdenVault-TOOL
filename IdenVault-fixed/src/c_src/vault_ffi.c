@@ -848,12 +848,4 @@ int vault_validate_engine_ffi(uint32_t id)
     return (int)err;
 }
 
-#ifndef VAULT_FFI_BUILD
-int main(void)
-{
-    printf("IdenVault Security Module\n");
-    printf("Version: 1.3.0\n");
-    printf("Compiled: %s %s\n", __DATE__, __TIME__);
-    return 0;
-}
-#endif
+/* Removed standalone `main` to avoid duplicate entry when building as library. */

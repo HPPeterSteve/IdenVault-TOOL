@@ -968,14 +968,4 @@ uint32_t vault_count_ffi(void) {
     return g_catalog.count;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
- *  STANDALONE MAIN (only when NOT compiled as FFI library)
- * ═══════════════════════════════════════════════════════════════════════════ */
-#ifndef VAULT_FFI_BUILD
-int main(void) {
-    printf("IdenVault Security Module\n");
-    printf("Version: 0.9.0\n");
-    printf("Compiled: %s %s\n", __DATE__, __TIME__);
-    return 0;
-}
-#endif
+/* Standalone `main` removed from module to avoid duplicate program entry. */
