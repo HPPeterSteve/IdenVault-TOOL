@@ -402,13 +402,20 @@ extern "C"
     int vault_rename_ffi(uint32_t id, const char *new_name, const char *password);
     int vault_unlock_ffi(uint32_t id, const char *password);
     int vault_change_password_ffi(uint32_t id, const char *old_pass, const char *new_pass);
-    int vault_encrypt_ffi(const char *password);
-    int vault_decrypt_ffi(const char *password);
+    /* FFI helpers for Rust integration */
+    typedef struct {
+        uint32_t id;
+        char path[VAULT_PATH_MAX];
+    } VaultIdPath;
+
+    int vault_encrypt_ffi(uint32_t id, const char *password);
+    int vault_decrypt_ffi(uint32_t id, const char *password);
     int vault_scan_ffi(uint32_t id);
     int vault_scan_report_ffi(uint32_t id, char *out, size_t out_len);
     int vault_resolve_ffi(uint32_t id, const char *password);
     void vault_info_ffi(uint32_t id);
     void vault_list_ffi(void);
+    int vault_list_ids_ffi(VaultIdPath *out, uint32_t out_cap, uint32_t *out_count);
     void vault_files_ffi(uint32_t id);
     int vault_sandbox_ffi(uint32_t id, const char *password);
     int vault_rule_ffi(uint32_t vault_id, int max_fails, int hour_from, int hour_to);
