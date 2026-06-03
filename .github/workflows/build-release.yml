@@ -1,0 +1,53 @@
+name: Build and attach release artifacts
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Dump C header for debugging
+        run: |
+          echo "--- repo root listing ---"
+          ls -la || true
+          echo "--- IdenVault-fixed listing ---"
+          ls -la IdenVault-fixed || true
+          echo "--- vault_core.h preview ---"
+          sed -n '1,160p' IdenVault-fixed/c_src/vault_core.h || true
+          echo "--- vault_core.h lines ---"
+          wc -l IdenVault-fixed/c_src/vault_core.h || true
+
+      - name: Install system packages (wayland, pkg-config, seccomp, libcap)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libwayland-dev libxkbcommon-dev libx11-dev libseccomp-dev libcap-dev build-essential
+
+      - name: Build release (x86_64 Linux)
+        working-directory: IdenVault-fixed
+        run: cargo build --release
+
+      - name: Package artifact
+        run: |
+          mkdir -p release
+          cp IdenVault-fixed/target/release/IdenVault release/IdenVault || true
+          tar -czvf release/IdenVault-linux-x86_64.tar.gz -C release IdenVault
+
+      - name: Upload artifact to GitHub Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: release/IdenVault-linux-x86_64.tar.gz
+          asset_name: IdenVault-linux-x86_64.tar.gz
+          asset_content_type: application/gzip
