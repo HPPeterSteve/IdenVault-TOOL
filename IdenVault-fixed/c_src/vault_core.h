@@ -208,6 +208,10 @@ extern "C"
         VaultStatus status;
         bool has_pass;
         char path[VAULT_PATH_MAX];
+        /* Directory where encrypted cipher blobs live */
+        char cipher_path[VAULT_PATH_MAX];
+        /* Runtime flag: whether the vault is currently mounted */
+        bool is_mounted;
         time_t created_at;
         time_t last_check;
         int failed_attempts;
