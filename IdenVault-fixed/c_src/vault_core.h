@@ -31,6 +31,9 @@ extern "C"
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#define VAULT_NAME_MAX 128
+#define VAULT_PATH_MAX 512
+
 #ifdef __linux__
 #include <unistd.h>
 #include <fcntl.h>
@@ -82,8 +85,6 @@ extern "C"
 
 #define MAX_VAULTS 2048
 #define MAX_FILES_PER_VAULT 4096
-#define VAULT_NAME_MAX 128
-#define VAULT_PATH_MAX 512
 #define HASH_HEX_LEN 65 /* SHA-256 hex + NUL */
 #define SALT_LEN 32
 #define KEY_LEN 32 /* AES-256 */
@@ -407,25 +408,6 @@ extern "C"
     int vault_export_and_decrypt_file_ffi(uint32_t id, const char *filename, const char *dst_path, const char *password);
     int vault_get_real_path_ffi(uint32_t id, char *out_path, size_t out_len);
     int vault_is_protected_ffi(uint32_t id);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* VAULT_CORE_H */
-    void vault_auth_pid_add_ffi(pid_t pid);
-    void vault_auth_pid_remove_ffi(pid_t pid);
-    int vault_auth_pid_is_authorized_ffi(pid_t pid);
-
-    /* Bulk vault listing — returns (id, resolved_path) for all active vaults */
-    typedef struct
-    {
-        uint32_t id;
-        char path[VAULT_PATH_MAX];
-    } VaultIdPath;
-
-    int vault_list_ids_ffi(VaultIdPath *out, uint32_t out_cap, uint32_t *out_count);
-    uint32_t vault_count_ffi(void);
 
 #ifdef __cplusplus
 }
